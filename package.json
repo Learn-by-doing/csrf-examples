@@ -1,5 +1,5 @@
 {
-  "name": "csrf",
+  "name": "csrf-examples",
   "version": "1.0.0",
   "description": "Example cross-site request forgery (CSRF) vulnerabilities in action.",
   "main": "index.js",

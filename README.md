@@ -1,4 +1,4 @@
-# CSRF
+# CSRF Examples
 
 Example Cross Site Request Forgery (CSRF) vulnerabilities in action.
 
@@ -13,7 +13,7 @@ Example Cross Site Request Forgery (CSRF) vulnerabilities in action.
 
 Download the code for this project by using git clone:
 ```bash
-git clone https://github.com/Learn-by-doing/csrf.git
+git clone https://github.com/Learn-by-doing/csrf-examples.git
 ```
 
 
