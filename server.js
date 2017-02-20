@@ -68,11 +68,11 @@ app.get('/login', function(req, res, next) {
 app.post('/login', function(req, res, next) {
 
 	if (!req.body.username) {
-		return res.send('Username is required.').status(400);
+		return res.status(400).send('Username is required.');
 	}
 
 	if (!req.body.password) {
-		return res.send('Password is required.').status(400);
+		return res.status(400).send('Password is required.');
 	}
 
 	var user = _.find(validLogins, function(login) {
@@ -80,7 +80,7 @@ app.post('/login', function(req, res, next) {
 	});
 
 	if (!user) {
-		return res.send('Invalid username or password.').status(400);
+		return res.status(400).send('Invalid username or password.');
 	}
 
 	// Valid login.
@@ -89,7 +89,7 @@ app.post('/login', function(req, res, next) {
 
 		if (error) {
 			console.log(error);
-			return res.send('An unexpected error occurred.').status(500);
+			return res.status(500).send('An unexpected error occurred.');
 		}
 
 		req.session.user = { name: user.username };
@@ -108,7 +108,7 @@ app.get('/transfer', requireLogin, function(req, res, next) {
 		function(error) {
 
 			if (error) {
-				return res.send(error.message).status(400);
+				return res.status(400).send(error.message);
 			}
 
 			// Successfully transferred funds.
@@ -129,7 +129,7 @@ app.post('/transfer', requireLogin, function(req, res, next) {
 		function(error) {
 
 			if (error) {
-				return res.send(error.message).status(400);
+				return res.status(400).send(error.message);
 			}
 
 			// Successfully transferred funds.
