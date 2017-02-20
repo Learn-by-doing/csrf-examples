@@ -3,6 +3,7 @@
 var _ = require('underscore');
 var BigNumber = require('bignumber.js');
 var bodyParser = require('body-parser');
+var csrf = require('csurf');
 var express = require('express');
 var exphbr = require('express-handlebars');
 var session = require('express-session');
@@ -21,6 +22,10 @@ app.use(session({
 	saveUninitialized: true,
 	cookie: { secure: false, httpOnly: false }
 }))
+
+// Add CSRF protection middleware.
+// Should be done AFTER session middleware.
+var csrfProtection = csrf();
 
 // Setup the templating middleware.
 // This allows us to use some logic and inject data into HTML templates before sending to the browser.
@@ -45,11 +50,12 @@ var requireLogin = function(req, res, next) {
 	next();
 };
 
-app.get('/', requireLogin, function(req, res, next) {
+app.get('/', requireLogin, csrfProtection, function(req, res, next) {
 
 	res.render('home', {
 		username: req.session.user.name,
-		balance: accounts[req.session.user.name] || 0
+		balance: accounts[req.session.user.name] || 0,
+		csrfToken: req.csrfToken()
 	});
 });
 
@@ -88,8 +94,7 @@ app.post('/login', function(req, res, next) {
 	req.session.regenerate(function(error) {
 
 		if (error) {
-			console.log(error);
-			return res.status(500).send('An unexpected error occurred.');
+			return next(error);
 		}
 
 		req.session.user = { name: user.username };
@@ -97,30 +102,9 @@ app.post('/login', function(req, res, next) {
 	});
 });
 
-// Funds transfer with HTTP GET request.
-// It is generally a bad idea to modify state via GET requests.
-app.get('/transfer', requireLogin, function(req, res, next) {
-
-	transferFunds(
-		req.query.to,
-		req.session.user.name,
-		req.query.amount,
-		function(error) {
-
-			if (error) {
-				return res.status(400).send(error.message);
-			}
-
-			// Successfully transferred funds.
-			// Redirect the user back to the home page.
-			res.redirect('/');
-		}
-	);
-});
-
 // Funds transfer with HTTP POST request.
 // This is safer than using a GET request, but is still vulnerable to some attack vectors.
-app.post('/transfer', requireLogin, function(req, res, next) {
+app.post('/transfer', requireLogin, csrfProtection, function(req, res, next) {
 
 	transferFunds(
 		req.body.to,
@@ -184,6 +168,23 @@ var transferFunds = function(to, from, amount, cb) {
 
 	cb();
 };
+
+app.use(function(error, req, res, next) {
+
+	if (error) {
+
+		if (error.code === 'EBADCSRFTOKEN') {
+			// Invalid CSRF token.
+			return res.status(400).send('Invalid CSRF token.');
+		}
+
+		// Unexpected error.
+		console.log(error);
+		return res.status(500).send('An unexpected error has occurred.');
+	}
+
+	next();
+});
 
 // This tells our express application to listen for local requests on port 3000.
 app.listen(3000, function() {
